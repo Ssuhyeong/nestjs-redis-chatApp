@@ -14,5 +14,7 @@
 * 간단하게 유튜브 채널이나 구독을 생각하면 된다.
 * 이전에 진행했던 MSA또한 이러한 pub/sub 방식을 통해 구현했으며, 중간다리(미들웨어)를 통해 통신을 원활하게 구현할 수 있다. 
 
+![image](https://github.com/user-attachments/assets/de83db17-c08a-44af-bf78-d38eab045991)
+
 ## reference
 Github: https://velog.io/@ohjinseo/WebSocket-Spring-Boot-stomp-Redis-PubSub-%EC%9D%B4%EC%9A%A9%ED%95%9C-%EC%B1%84%ED%8C%85-%EA%B5%AC%ED%98%84
