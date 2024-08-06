@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+      integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+      crossorigin="anonymous"
+    />
+    <title>Nestjs Chat Real Time</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  </head>
+  <body>
+    <div id="app" class="container">
+      <div class="row">
+        <div class="col-md-6 offset-md-3 col-sm-12">
+          <h1 class="text-center" id="title"></h1>
+          <br />
+          <div id="status"></div>
+          <div id="chat">
+            <label for="room">Select room:</label>
+            <select class="form-control" id="room"></select>
+            <br />
+            <label for="username">Your Name:</label>
+            <input
+              type="text"
+              id="username"
+              class="form-control"
+              placeholder="Enter name..."
+            />
+            <br />
+            <label for="messages">Chat:</label>
+            <div class="card">
+              <div id="messages" class="card-block">
+                <ul id="messageList"></ul>
+              </div>
+            </div>
+            <br />
+            <label for="textarea">Message:</label>
+            <textarea
+              id="textarea"
+              class="form-control"
+              placeholder="Enter message..."
+            ></textarea>
+            <br />
+            <button id="send" class="btn">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const app = {
+          title: 'NestJS Chat Real Time',
+          name: '',
+          text: '',
+          selected: 'general',
+          messages: [],
+          socket: null,
+          activeRoom: '',
+          rooms: {
+            general: false,
+            roomA: false,
+            roomB: false,
+            roomC: false,
+            roomD: false,
+          },
+          listRooms: ['general', 'roomA', 'roomB', 'roomC', 'roomD'],
+        };
+
+        const titleElement = document.getElementById('title');
+        const roomSelect = document.getElementById('room');
+        const usernameInput = document.getElementById('username');
+        const messagesElement = document.getElementById('messages');
+        const messageList = document.getElementById('messageList');
+        const textarea = document.getElementById('textarea');
+        const sendButton = document.getElementById('send');
+
+        titleElement.textContent = app.title;
+        app.listRooms.forEach((room) => {
+          const option = document.createElement('option');
+          option.value = room;
+          option.textContent = room;
+          roomSelect.appendChild(option);
+        });
+
+        roomSelect.addEventListener('change', (event) => {
+          if (app.socket) {
+            app.socket.emit('leaveRoom', app.activeRoom);
+            app.activeRoom = event.target.value;
+            app.socket.emit('joinRoom', app.activeRoom);
+          }
+        });
+
+        sendButton.addEventListener('click', () => {
+          app.name = usernameInput.value;
+          app.text = textarea.value;
+          if (app.name.length > 0 && app.text.length > 0) {
+            const message = {
+              name: app.name,
+              text: app.text,
+              room: app.activeRoom,
+            };
+            app.socket.emit('msgToServer', message);
+            textarea.value = '';
+          }
+        });
+
+        const receivedMessage = (message) => {
+          const li = document.createElement('li');
+          li.textContent = `${message.name}: ${message.text}`;
+          messageList.appendChild(li);
+        };
+
+        app.socket = io('http://localhost:4200', {
+          withCredentials: true,
+          transports: ['websocket'],
+        });
+
+        app.socket.on('msgToClient', (message) => {
+          console.log(message);
+          receivedMessage(message);
+        });
+
+        app.socket.on('connect', () => {
+          app.socket.emit('joinRoom', app.selected);
+        });
+
+        app.socket.on('joinedRoom', (room) => {
+          app.rooms[room] = true;
+        });
+
+        app.socket.on('leftRoom', (room) => {
+          app.rooms[room] = false;
+        });
+      });
+    </script>
+  </body>
+</html>
